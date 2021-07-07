@@ -6,8 +6,9 @@
 #include "inventory.h"
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
+    : QMainWindow(parent),
+      inventory(new Inventory(3, 3, this)), //создаю Инвентарь
+      ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -22,21 +23,17 @@ MainWindow::MainWindow(QWidget *parent)
     QMenu *menu;
     menu = menuBar()->addMenu("&Меню");
 
-    // Помещаем действие "Quit" (Выход) в меню с помощью метода addAction()
+    // Помещаем действие "Quit" (Выход) и "newGame" (Новая игра) в меню с помощью метода addAction()
     menu->addAction(newGame);
     menu->addAction(quit);
 
     // Когда мы выбираем в меню опцию "Quit", то приложение сразу же завершает свое выполнение
     connect(quit, &QAction::triggered, qApp, QApplication::quit);
-
     // Когда мы выбираем в меню опцию "newGame", то mainWindow становится доступным для польователя
-
     connect(newGame, SIGNAL(triggered()), this, SLOT(setMainWindowEnabled()));
 
     QHBoxLayout* hLayout = new QHBoxLayout; //создаю горизонтальный layout
-
-    QWidget* inventory = new Inventory(3,3, this); //создаю Инвентарь
-    hLayout->addWidget(inventory); //добавляю в горизонтальный layout Инвентарь
+    hLayout->addWidget(static_cast<QWidget*>(inventory.get())); //добавляю в горизонтальный layout Инвентарь
 
     QVBoxLayout* vLayout = new QVBoxLayout; //создаю вертикальный layout
     QWidget* first = new Item(APPLE, 1, this, true); //создаю объект APPLE
@@ -53,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::setMainWindowEnabled(){
     ui->centralwidget->setEnabled(true);
-
+    inventory->clear();
 }
 
 MainWindow::~MainWindow()

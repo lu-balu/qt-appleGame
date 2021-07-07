@@ -9,13 +9,15 @@ Inventory::Inventory(int height, int width, QWidget* parent):
     vec.resize(height); //выделяю для внешнего вектора количество строк
     for(int i = 0; i < height; ++i){
         vec[i].resize(width); //выделяю для внутреннего вектора количество столбцов
+        for(int j = 0; j < width; ++j){
+            vec[i][j].reset(new Cell);
+        }
     }
 
     QGridLayout* grid = new QGridLayout; // создаю сетку из ячеек с размерностью height*width
     for(int i = 0; i < height; ++i){
         for(int j = 0; j < width; ++j){
-            QWidget* obj = new Cell();
-            grid->addWidget(obj, i, j);
+            grid->addWidget(static_cast<QWidget*>(vec[i][j].get()), i, j);
         }
     }
     grid->setMargin(0);

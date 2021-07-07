@@ -56,6 +56,9 @@ void Cell::dropEvent (QDropEvent* event){
 }
 
 void Cell::clearCell(){
+    if(item.isNull()){
+        return;
+    }
     item.reset();
 }
 
