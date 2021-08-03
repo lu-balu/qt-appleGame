@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QMediaPlayer>
 #include <QMediaPlaylist>
+#include <QtSql>
 
 namespace Ui {
 class Item;
@@ -14,11 +15,18 @@ class Item : public QWidget
     Q_OBJECT
 
 public:
-    Item(ItemType type, int count, QWidget* parent = nullptr, bool infinity = false);
-    ItemType type;
-    QString path;
-    QString sound;
-    int count;
+    //конструктор для бесконечного Item
+    Item(ItemType type,
+         QWidget* parent = nullptr);
+    //конструктор для Item в ячейке
+    Item(ItemType type,
+         int count,
+         int line,
+         int column,
+         QSqlDatabase* base,
+         QWidget* parent = nullptr);
+    virtual ~Item() { delete ui; }
+
     bool isEmpty();
     void startDrag();
     void mouseReleaseEvent (QMouseEvent* event);
@@ -27,14 +35,23 @@ public:
     void clear();
     void mousePressEvent(QMouseEvent* event);
     void mouseMoveEvent (QMouseEvent* event);
+
+    ItemType type;
+    int count;
     bool infinity;
+    int line;
+    int column;
+    QString path;
+    QString sound;
     QMediaPlayer* player;
     QMediaPlaylist* playlist;
-    virtual ~Item() { delete ui; }
 
 private:
-    Ui::Item *ui;
+    QString typeToPath(ItemType type);
+
+    QSqlDatabase* base;
     QPoint m_ptDragPos;
+    Ui::Item *ui;
 };
 
 #endif // ITEM_H

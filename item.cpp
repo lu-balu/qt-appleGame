@@ -4,13 +4,50 @@
 #include <QtWidgets>
 #include <QMouseEvent>
 #include <QDebug>
+#include <QtSql>
 
-Item::Item(ItemType itemType, int count, QWidget *parent, bool infinity) :
-  QWidget(parent),
-  type(itemType),
-  count(count),
-  infinity(infinity),
-  ui(new Ui::Item)
+//конструктор для бесконечного Item
+Item::Item(ItemType type,
+           QWidget* parent) :
+    QWidget(parent),
+    type(type),
+    count(1),
+    infinity(true),
+    line(-1),
+    column(-1),
+    path(typeToPath(type)),
+    player(nullptr),
+    playlist(nullptr),
+    base(nullptr),
+    ui(new Ui::Item)
+{
+    ui->setupUi(this);
+    // устанавливаю для двух перетаскиваемых infinity Item невидимое поле count
+        ui->label->setText("");
+
+        QPixmap myPic(path); // создаю Pixmap в которую добавляю картинку в зависимости от ItemType и отображаю ее
+        ui->label_2->setPixmap(myPic);
+        ui->label_2->setScaledContents(true);
+        ui->label_2->show();
+}
+//конструктор для Item в ячейке
+Item::Item(ItemType type,
+           int count,
+           int line,
+           int column,
+           QSqlDatabase* base,
+           QWidget* parent) :
+    QWidget(parent),
+    type(type),
+    count(count),
+    infinity(false),
+    line(line),
+    column(column),
+    path(typeToPath(type)),
+    player(nullptr),
+    playlist(nullptr),
+    base(base),
+    ui(new Ui::Item)
 {
     player = new QMediaPlayer(this); // создаю плейлист со звуком откусывания яблока
     playlist = new QMediaPlaylist(player);
@@ -25,18 +62,7 @@ Item::Item(ItemType itemType, int count, QWidget *parent, bool infinity) :
     playlist->addMedia(QUrl(sound));
 
     ui->setupUi(this);
-    if(infinity){ // устанавливаю для двух перетаскиваемых infinity Item невидимое поле count
-        ui->label->setText("");
-    }
-    else{
-        ui->label->setText(QString::number(count));// устанавливаю для остальных Item отображение счетчика count
-    }
-    if(type == APPLE) {
-        path = ":/pictures/apple.png"; //указываю путь к картинке в зависимости от ItemType
-    }
-    else {
-        path = ":/pictures/cherry.png";
-    }
+    ui->label->setText(QString::number(count));// устанавливаю для остальных Item отображение счетчика count
 
     QPixmap myPic(path); // создаю Pixmap в которую добавляю картинку в зависимости от ItemType и отображаю ее
     ui->label_2->setPixmap(myPic);
@@ -91,6 +117,20 @@ void Item::startDrag(){ // перетаскивание Item
     Qt::DropAction result = pDrag->exec(Qt::MoveAction);
     if(result == Qt::MoveAction && !infinity){ // если Item перетащился в другую ячейку, и Item не равен infinity - он чистится
         clear();
+        QSqlQuery query;
+        //заполняю запрос на очищение строки в БД при успешном drag
+        QString str = "UPDATE apple SET count = 0, type = 0 WHERE line = %1 AND column = %2";
+        str = str.arg(line)
+                 .arg(column);
+        bool b = query.exec(str);
+        if(!b) {
+            qDebug() << "не получается выполнить запрос на очищение строки в БД при успешном drag";
+            qDebug() << base->lastError().text();
+        }
+        else{
+            qDebug() << "выполнен запрос наочищение строки в БД при успешном drag";
+            qDebug() << "очищена строка" << line << " столбец" << column;
+        }
     }
 }
 
@@ -103,6 +143,20 @@ void Item::mouseReleaseEvent (QMouseEvent* event){
     }
     if(event->button() == Qt::RightButton){ // при нажатии правой кнопки мыши на Item происходит удаление 1
         remove();
+    }
+    QSqlQuery query;
+    //заполняю запрос на изменение строки в БД
+    QString str = "UPDATE apple SET count = %1 WHERE line = %2 AND column = %3";
+    str = str.arg(count)
+             .arg(line)
+             .arg(column);
+    bool b = query.exec(str);
+    if(!b) {
+        qDebug() << "не получается выполнить запрос на изменение строки в БД";
+        qDebug() << base->lastError().text();
+    }
+    else{
+        qDebug() << "изменена строка" << line << " столбец" << column;
     }
     QWidget::mousePressEvent(event);
 }
@@ -123,6 +177,12 @@ void Item::mouseMoveEvent(QMouseEvent *event){// нужен для распоз�
     QWidget::mouseMoveEvent(event);
 }
 
+QString Item::typeToPath(ItemType type){
+    if(type == APPLE) {
+        return ":/pictures/apple.png"; //указываю путь к картинке в зависимости от ItemType
+    }
+    return ":/pictures/cherry.png";
+}
 
 
 

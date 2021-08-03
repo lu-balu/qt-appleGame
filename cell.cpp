@@ -7,9 +7,12 @@
 //#include "item.h"
 //#include <QtAlgorithms>
 
-Cell::Cell(QWidget *parent) :
+Cell::Cell(QSqlDatabase* base, int line, int column, QWidget *parent) :
   QWidget(parent),
   item(nullptr),
+  line(line),
+  column(column),
+  base(base),
   ui(new Ui::Cell){
     ui->setupUi(this);
     setAcceptDrops(true);
@@ -30,6 +33,9 @@ void Cell::dropEvent (QDropEvent* event){
     int newType = event->mimeData()->objectName().toInt(); // в newType записываю тип из mimeData перетаскиваемого Item
     ItemType type = static_cast<ItemType>(newType);
 
+    //создаю запрос в БД
+    QSqlQuery query;
+
     if(!item.isNull()){//если Item уже существует и если он пустой - чищу от него ячейку
         if(item->isEmpty()){
             item.reset();
@@ -42,8 +48,7 @@ void Cell::dropEvent (QDropEvent* event){
         }
         count += item->count;
     }
-
-    item.reset(new Item(type, count, this)); //создаю новый Item, в который записываю данные из перетаскиваемого ItemF
+    item.reset(new Item(type, count, line, column, base, this)); //создаю новый Item, в который записываю данные из перетаскиваемого Item
     event->acceptProposedAction();
     qDebug() << "В ячейку записался count: " << count;
     qDebug() << "В ячейку записался type: " << newType;
@@ -53,6 +58,22 @@ void Cell::dropEvent (QDropEvent* event){
     QVBoxLayout* vBox = new QVBoxLayout(this); //создаю layout, добавляю и отрисовываю в нем item
     vBox->addWidget(item.get());
     ui->widget->setLayout(vBox);
+
+    //заполняю запрос на изменение строки в БД
+
+    QString str = "UPDATE apple SET count = %1, type = %2 WHERE line = %3 AND column = %4";
+    str = str.arg(count)
+             .arg(newType)
+             .arg(line)
+             .arg(column);
+    bool b = query.exec(str);
+    if(!b) {
+        qDebug() << "не получается выполнить запрос на изменение строки в БД";
+        qDebug() << base->lastError().text();
+    }
+    else{
+        qDebug() << "изменена строка" << line << " столбец" << column;
+    }
 }
 
 void Cell::clearCell(){

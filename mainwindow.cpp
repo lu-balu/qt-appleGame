@@ -36,8 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
     hLayout->addWidget(static_cast<QWidget*>(inventory.get())); //добавляю в горизонтальный layout Инвентарь
 
     QVBoxLayout* vLayout = new QVBoxLayout; //создаю вертикальный layout
-    QWidget* first = new Item(APPLE, 1, this, true); //создаю объект APPLE
-    QWidget* second = new Item(PEACH, 1, this, true);  //создаю объект PEACH
+    QWidget* first = new Item(APPLE, this); //создаю объект APPLE
+    QWidget* second = new Item(PEACH, this);  //создаю объект PEACH
     vLayout->addWidget(first); // добавляю в вертикальный layout APPLE
     vLayout->addWidget(second); // добавляю в вертикальный layout PEACH
 
