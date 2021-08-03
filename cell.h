@@ -15,6 +15,7 @@ class Cell: public QWidget
 
 public:
     Cell(QSqlDatabase* base, int line, int column, QWidget* parent = nullptr);
+    Cell(int count, ItemType type, QSqlDatabase* base, int line, int column, QWidget* parent = nullptr);
     void dragEnterEvent (QDragEnterEvent* event);
     void dropEvent (QDropEvent* event);
     void clearCell();

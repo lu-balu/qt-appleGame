@@ -12,7 +12,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    ui->centralwidget->setDisabled(true);
+//    ui->centralwidget->setDisabled(true);
 
     // Создаем объект класса QAction (действие) с названием пункта меню "Quit"
     QAction *quit = new QAction("&Выйти", this);

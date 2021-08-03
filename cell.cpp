@@ -7,15 +7,33 @@
 //#include "item.h"
 //#include <QtAlgorithms>
 
+Cell::Cell(int count, ItemType type, QSqlDatabase* base, int line, int column, QWidget* parent) :
+    QWidget(parent),
+    item(nullptr),
+    line(line),
+    column(column),
+    base(base),
+    ui(new Ui::Cell)
+{
+    ui->setupUi(this);
+    setAcceptDrops(true);
+    if(count != 0){
+        item.reset(new Item(type, count, line, column, base, this));
+        QVBoxLayout* vBox = new QVBoxLayout(this); //создаю layout, добавляю и отрисовываю в нем item
+        vBox->addWidget(item.get());
+        ui->widget->setLayout(vBox);
+    }
+}
+
 Cell::Cell(QSqlDatabase* base, int line, int column, QWidget *parent) :
   QWidget(parent),
   item(nullptr),
   line(line),
   column(column),
   base(base),
-  ui(new Ui::Cell){
-    ui->setupUi(this);
+  ui(new Ui::Cell) {
     setAcceptDrops(true);
+    ui->setupUi(this);
 }
 
 void Cell::dragEnterEvent (QDragEnterEvent* event){

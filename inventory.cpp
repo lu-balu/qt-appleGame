@@ -29,7 +29,7 @@ Inventory::Inventory(int height, int width, QWidget* parent):
         qDebug() << base.lastError().text();
         return;
     }
-    // query переходит к следующей строке (первой)
+    // query переходит к следующей строке (0)
     query.next();
     //query.value() возвращает значение, которое лежит в 0 столбце (0 или 1)
     QVariant result = query.value(0);
@@ -58,10 +58,54 @@ Inventory::Inventory(int height, int width, QWidget* parent):
     vec.resize(height); //выделяю для внешнего вектора количество строк
     for(int i = 0; i < height; ++i){
         vec[i].resize(width); //выделяю для внутреннего вектора количество столбцов
-        for(int j = 0; j < width; ++j){
-            vec[i][j].reset(new Cell(&base, i, j));
-        }
     }
+
+
+
+
+
+
+
+
+
+// Заполняю вектор ячейками
+
+  // ЗАПОЛНЕНИЕ ИНВЕНТОРЯ ИЗ БД
+
+    str = "SELECT * FROM apple";
+    b = query.exec(str);
+    if(!b) {
+        qDebug() << "не удалось выполнить запрос выбрать все из таблицы";
+        qDebug() << base.lastError().text();
+        return;
+    }
+    // query переходит к следующей строке (первой)
+    while(query.next()){
+        //query.value() возвращает значение, которое лежит в 1 столбце этой строчки (номер строчки)
+        int line = query.value("line").value<int>();
+        //query.value() возвращает значение, которое лежит во 2 столбце этой строчки (номер колонки)
+        int column = query.value("column").value<int>();
+
+        int count = query.value("count").value<int>();
+        ItemType type = static_cast<ItemType>(query.value("type").value<int>());
+
+        // создание ячейки и добавление ее в таблицу
+        vec[line][column].reset(new Cell(count, type, &base, line, column, this));
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     QGridLayout* grid = new QGridLayout; // создаю сетку из ячеек с размерностью height*width
     for(int i = 0; i < height; ++i){
